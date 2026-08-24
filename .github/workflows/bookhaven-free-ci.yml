@@ -1,0 +1,35 @@
+name: BookHaven Free CI
+
+on:
+  push:
+    branches: [bookhaven-free]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Restore BookHaven snapshot
+        run: cat bookhaven-deploy/archive.part* | base64 -d | tar -xzf -
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund --prefix bookhaven/backend
+      - name: Typecheck backend
+        run: npm run typecheck --prefix bookhaven/backend
+      - name: Build backend
+        run: npm run build --prefix bookhaven/backend
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund --prefix bookhaven/frontend
+      - name: Typecheck frontend
+        run: npm run typecheck --prefix bookhaven/frontend
+      - name: Build frontend
+        env:
+          INTERNAL_API_URL: http://127.0.0.1:3001/api/v1
+        run: npm run build --prefix bookhaven/frontend
