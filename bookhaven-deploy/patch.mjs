@@ -34,4 +34,10 @@ const cart = 'bookhaven/backend/src/modules/cart/cart.controller.ts';
 replace(cart, 'export async function update(req: AuthRequest, res: Response)', 'export async function update(req: AuthRequest<{ bookId: string }>, res: Response)');
 replace(cart, 'export async function remove(req: AuthRequest, res: Response)', 'export async function remove(req: AuthRequest<{ bookId: string }>, res: Response)');
 
+replace(
+  'bookhaven/frontend/next.config.ts',
+  "const nextConfig: NextConfig = {\n  output: 'standalone',",
+  "const nextConfig: NextConfig = {\n  output: 'standalone',\n  turbopack: { root: process.cwd() },",
+);
+
 console.log('BookHaven deployment patches applied.');
