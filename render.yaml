@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: bookhaven-free
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: bookhaven-free
+    buildCommand: cat bookhaven-deploy/archive.part* | base64 -d | tar -xzf - && npm install --no-audit --no-fund --prefix bookhaven/backend && npm run build --prefix bookhaven/backend && npm install --no-audit --no-fund --prefix bookhaven/frontend && npm run build --prefix bookhaven/frontend
+    startCommand: cd bookhaven && npm run start:free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: INTERNAL_API_URL
+        value: http://127.0.0.1:3001/api/v1
+      - key: BACKEND_PORT
+        value: "3001"
+      - key: AUTO_SEED
+        value: "true"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        value: http://127.0.0.1:3001
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
