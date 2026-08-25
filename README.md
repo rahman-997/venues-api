@@ -7,6 +7,7 @@ file persistence.
 ## Highlights
 
 - Versioned REST endpoints under `/v1/venues`
+- Lightweight `/health` endpoint for deployment monitoring
 - Strict validation for request bodies, route parameters, and query strings
 - Layered routes → controllers → services design
 - Centralized, predictable error responses
@@ -93,6 +94,7 @@ npm test
 | `GET` | `/v1/venues/:id` | Get a venue by ID |
 | `PATCH` | `/v1/venues/:id` | Partially update a venue |
 | `DELETE` | `/v1/venues/:id` | Delete a venue |
+| `GET` | `/health` | Service health check |
 
 `GET /venues` redirects to the versioned collection endpoint.
 
@@ -168,6 +170,7 @@ Common status codes are `400` for invalid input, `404` for a missing venue,
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | HTTP server port |
+| `HOST` | `0.0.0.0` | HTTP bind address |
 | `VENUES_DATA_FILE` | `data/venues.json` | JSON persistence path |
 
 Tests set `VENUES_DATA_FILE` to an isolated temporary file, exercise both the
