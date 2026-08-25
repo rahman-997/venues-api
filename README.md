@@ -4,6 +4,11 @@ A small, production-minded REST API for managing venues. It uses Express 5,
 TypeScript, and Zod with a deliberately simple layered architecture and JSON
 file persistence.
 
+**Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com)  
+**Health check:** [`/health`](https://venues-api-rahman.onrender.com/health)
+
+> The free Render instance can take a short moment to wake after inactivity.
+
 ## Highlights
 
 - Versioned REST endpoints under `/v1/venues`
