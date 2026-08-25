@@ -13,7 +13,7 @@ file persistence.
 - Case-insensitive venue-name uniqueness checks
 - Server-generated UUIDs and ISO timestamps
 - Configurable JSON persistence for local development and tests
-- Type checking, production builds, and a lightweight service test suite
+- Type checking, production builds, and service plus HTTP contract tests
 
 ## Tech stack
 
@@ -170,8 +170,8 @@ Common status codes are `400` for invalid input, `404` for a missing venue,
 | `PORT` | `3000` | HTTP server port |
 | `VENUES_DATA_FILE` | `data/venues.json` | JSON persistence path |
 
-Tests set `VENUES_DATA_FILE` to an isolated temporary file, so development data
-is not modified.
+Tests set `VENUES_DATA_FILE` to an isolated temporary file, exercise both the
+service layer and real HTTP endpoints, and never modify development data.
 
 ## Scripts
 
@@ -181,7 +181,7 @@ is not modified.
 | `npm run typecheck` | Check TypeScript without emitting files |
 | `npm run build` | Compile the production build |
 | `npm start` | Run the compiled server |
-| `npm test` | Run the service test suite |
+| `npm test` | Run service and HTTP contract tests |
 
 ## License
 

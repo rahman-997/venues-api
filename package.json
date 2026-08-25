@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/venues.test.ts"
+    "test": "node --import tsx test/venues.test.ts"
   },
   "dependencies": {
     "express": "^5.1.0",
