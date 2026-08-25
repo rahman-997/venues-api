@@ -38,6 +38,11 @@ try {
   const { port } = server.address() as AddressInfo;
   const baseUrl = `http://127.0.0.1:${port}`;
 
+  const healthResponse = await fetch(`${baseUrl}/health`);
+  const healthBody = await healthResponse.json();
+  assert.strictEqual(healthResponse.status, 200);
+  assert.strictEqual(healthBody.status, "ok");
+
   const createResponse = await fetch(`${baseUrl}/v1/venues`, {
     method: "POST",
     headers: { "content-type": "application/json" },
