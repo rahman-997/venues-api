@@ -89,8 +89,13 @@ export const venueService = {
       throw new HttpError(409, `Venue with name "${input.name}" already exists`);
     }
 
+    const existing = venues[index];
+    if (!existing) {
+      throw new HttpError(404, `Venue with id "${id}" not found`);
+    }
+
     const updated: Venue = {
-      ...venues[index],
+      ...existing,
       ...input,
     };
 
