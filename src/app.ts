@@ -4,6 +4,9 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 app.use(express.json());
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 // Redirect legacy path to the API versioned path
 app.get("/venues", (_req, res) => res.redirect("/v1/venues"));
 app.use(routes);
