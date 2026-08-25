@@ -68,8 +68,8 @@ src/
 ### Install and run
 
 ```bash
-git clone https://github.com/rahman-997/new97.git
-cd new97
+git clone https://github.com/rahman-997/venues-api.git
+cd venues-api
 npm install
 npm run dev
 ```
