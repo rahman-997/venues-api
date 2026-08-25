@@ -1,85 +1,188 @@
-<<<<<<< HEAD
 # Venues API
 
-A RESTful API for managing venues built with Express 5, TypeScript, and Zod. This project follows a layered architecture (Routes → Controller → Service) ensuring clear separation of concerns.
+A small, production-minded REST API for managing venues. It uses Express 5,
+TypeScript, and Zod with a deliberately simple layered architecture and JSON
+file persistence.
 
-## Architecture Highlights
-- **Clean Architecture:** Business logic is isolated in the `Service` layer. `Controllers` only handle HTTP mapping, and `Routes` manage wiring and middleware.
-- **Robust Validation:** Requests (body, query, params) are validated using centralized `Zod` schemas and middleware.
-- **Centralized Error Handling:** A central error-handling middleware catches `HttpError` instances, `ZodError` validation failures, and unhandled exceptions.
-- **JSON Persistence:** Data is persisted to `data/venues.json` by default; configurable via `VENUES_DATA_FILE`.
+## Highlights
 
-## Getting Started
+- Versioned REST endpoints under `/v1/venues`
+- Strict validation for request bodies, route parameters, and query strings
+- Layered routes → controllers → services design
+- Centralized, predictable error responses
+- Case-insensitive venue-name uniqueness checks
+- Server-generated UUIDs and ISO timestamps
+- Configurable JSON persistence for local development and tests
+- Type checking, production builds, and a lightweight service test suite
 
-### Prerequisites
-- Node.js (v18 or higher recommended)
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Runtime | Node.js 18+ |
+| HTTP | Express 5 |
+| Language | TypeScript 5 |
+| Validation | Zod 4 |
+| Development | tsx |
+| Persistence | JSON file |
+
+## Architecture
+
+```text
+src/
+├── app.ts
+├── server.ts
+├── errors/
+│   └── HttpError.ts
+├── middleware/
+│   ├── errorHandler.ts
+│   └── validate.ts
+├── routes/
+│   └── index.ts
+└── venues/
+    ├── venue.controller.ts
+    ├── venue.routes.ts
+    ├── venue.schema.ts
+    ├── venue.service.ts
+    └── venue.types.ts
+```
+
+- **Routes** connect endpoints to validation and controllers.
+- **Controllers** translate HTTP requests and responses.
+- **Services** contain business rules and persistence operations.
+- **Middleware** validates inputs and formats errors consistently.
+
+## Getting started
+
+### Requirements
+
+- Node.js 18 or later
 - npm
 
-### Installation
-1. Clone the repository or extract the source code.
-2. Install dependencies:
-```bash
-npm install
-```
+### Install and run
 
-### Running the Application
-**Development Mode (with auto-reload):**
 ```bash
+git clone https://github.com/rahman-997/new97.git
+cd new97
+npm install
 npm run dev
 ```
-The server will start at `http://localhost:3000`.
 
-**Type Checking:**
-```bash
-npm run typecheck
-```
+The API starts at `http://localhost:3000` by default.
 
-**Production Build:**
+### Production build
+
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
-## API Endpoints
+### Quality checks
 
-| Method | Endpoint         | Description                         |
-|--------|------------------|-------------------------------------|
-| POST   | `/v1/venues`     | Create a new venue                  |
-| GET    | `/v1/venues`     | List venues (supports `?limit=`)    |
-| GET    | `/v1/venues/:id` | Get a venue by ID                   |
-| PATCH  | `/v1/venues/:id` | Partially update a venue            |
-| DELETE | `/v1/venues/:id` | Delete a venue                      |
+```bash
+npm run typecheck
+npm test
+```
 
-## Data Model
+## API reference
 
-**Venue**
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/v1/venues` | Create a venue |
+| `GET` | `/v1/venues?limit=20` | List venues |
+| `GET` | `/v1/venues/:id` | Get a venue by ID |
+| `PATCH` | `/v1/venues/:id` | Partially update a venue |
+| `DELETE` | `/v1/venues/:id` | Delete a venue |
+
+`GET /venues` redirects to the versioned collection endpoint.
+
+### Venue model
+
 ```ts
-{
-  id: string;          // Auto-generated UUID
-  name: string;        // Unique (case-insensitive)
+type Venue = {
+  id: string;
+  name: string;
   address: string;
-  capacity: number;    // Positive integer
-  contactEmail: string; // Valid email format
-  createdAt: string;   // Auto-generated ISO Date
-}
+  capacity: number;
+  contactEmail: string;
+  createdAt: string;
+};
 ```
 
-## Examples
+The API generates `id` with `crypto.randomUUID()` and creates `createdAt` as
+an ISO timestamp. Venue names must be unique regardless of letter case.
 
-Create a venue:
+### Create a venue
+
 ```bash
 curl -X POST http://localhost:3000/v1/venues \
   -H "Content-Type: application/json" \
-  -d '{"name":"My Hall","address":"1 Road","capacity":100,"contactEmail":"a@b.com"}'
+  -d '{
+    "name": "Bosphorus Hall",
+    "address": "1 Example Street, Istanbul",
+    "capacity": 250,
+    "contactEmail": "events@example.com"
+  }'
 ```
 
-Run tests:
+Successful response:
+
+```json
+{
+  "data": {
+    "id": "2abf9fc3-7a76-4e40-9c96-5a612b336824",
+    "name": "Bosphorus Hall",
+    "address": "1 Example Street, Istanbul",
+    "capacity": 250,
+    "contactEmail": "events@example.com",
+    "createdAt": "2026-08-25T10:00:00.000Z"
+  }
+}
+```
+
+### Update a venue
+
 ```bash
-npm run test
+curl -X PATCH http://localhost:3000/v1/venues/VENUE_ID \
+  -H "Content-Type: application/json" \
+  -d '{"capacity":300}'
 ```
 
-Notes:
+### Error shape
 
-- Data is persisted to `data/venues.json` by default. Change path with `VENUES_DATA_FILE`.
-- Launch configuration is set to open `http://localhost:3000/v1/venues` in the debugger.
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": []
+  }
+}
+```
 
+Common status codes are `400` for invalid input, `404` for a missing venue,
+`409` for a duplicate name, and `500` for unexpected persistence failures.
+
+## Configuration
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3000` | HTTP server port |
+| `VENUES_DATA_FILE` | `data/venues.json` | JSON persistence path |
+
+Tests set `VENUES_DATA_FILE` to an isolated temporary file, so development data
+is not modified.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the server with file watching |
+| `npm run typecheck` | Check TypeScript without emitting files |
+| `npm run build` | Compile the production build |
+| `npm start` | Run the compiled server |
+| `npm test` | Run the service test suite |
+
+## License
+
+No license has been added yet. Add one before redistributing the project.
