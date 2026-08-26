@@ -1,7 +1,7 @@
 {
   "name": "venues-api",
   "version": "1.0.0",
-  "description": "A RESTful API for managing venues.",
+  "description": "A production-minded REST API for managing venues with Express 5, TypeScript, and Zod.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx test/venues.test.ts"
+    "test": "node --import tsx test/venues.test.ts",
+    "verify": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "express": "^5.1.0",
@@ -20,5 +21,20 @@
     "@types/node": "^24.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.9.0"
-  }
+  },
+  "author": "Abdulrahman Hajjar",
+  "homepage": "https://venues-api-rahman.onrender.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahman-997/venues-api.git"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "zod",
+    "rest-api",
+    "nodejs",
+    "validation",
+    "layered-architecture"
+  ]
 }
