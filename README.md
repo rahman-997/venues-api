@@ -1,11 +1,14 @@
 # Venues API
 
+[![CI](https://github.com/rahman-997/venues-api/actions/workflows/ci.yml/badge.svg)](https://github.com/rahman-997/venues-api/actions/workflows/ci.yml)
+
 A small, production-minded REST API for managing venues. It uses Express 5,
 TypeScript, and Zod with a deliberately simple layered architecture and JSON
 file persistence.
 
 **Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com)  
-**Health check:** [`/health`](https://venues-api-rahman.onrender.com/health)
+**Health check:** [`/health`](https://venues-api-rahman.onrender.com/health)  
+**Portfolio case study:** [Venues API engineering case study](https://abdulrahman-hajjar-dev.netlify.app/work/venues-api/)
 
 > The free Render instance can take a short moment to wake after inactivity.
 
