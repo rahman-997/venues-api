@@ -196,4 +196,4 @@ service layer and real HTTP endpoints, and never modify development data.
 
 ## License
 
-No license has been added yet. Add one before redistributing the project.
+Released under the [MIT License](LICENSE).
