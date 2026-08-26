@@ -2,40 +2,50 @@
 
 [![CI](https://github.com/rahman-997/venues-api/actions/workflows/ci.yml/badge.svg)](https://github.com/rahman-997/venues-api/actions/workflows/ci.yml)
 
-A small, production-minded REST API for managing venues. It uses Express 5,
-TypeScript, and Zod with a deliberately simple layered architecture and JSON
-file persistence.
+**A compact backend service designed to demonstrate clean API architecture, strict validation, predictable errors, persistence boundaries, and repeatable verification.**
 
-**Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com)  
-**Health check:** [`/health`](https://venues-api-rahman.onrender.com/health)  
-**Portfolio case study:** [Venues API engineering case study](https://abdulrahman-hajjar-dev.netlify.app/work/venues-api/)
+Built with **Express 5, TypeScript 5, and Zod 4**, the API manages venue resources through a versioned REST contract and a deliberately small layered architecture.
 
-> The free Render instance can take a short moment to wake after inactivity.
+**Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com) · **Health:** [/health](https://venues-api-rahman.onrender.com/health) · **Case study:** [Portfolio](https://abdulrahman-hajjar-dev.netlify.app/work/venues-api/) · **Engineer:** [Abdulrahman Hajar](https://github.com/rahman-997)
 
-## Highlights
+> The free Render instance may need a short wake-up after inactivity.
 
-- Versioned REST endpoints under `/v1/venues`
-- Lightweight `/health` endpoint for deployment monitoring
-- Strict validation for request bodies, route parameters, and query strings
-- Layered routes → controllers → services design
-- Centralized, predictable error responses
-- Case-insensitive venue-name uniqueness checks
-- Server-generated UUIDs and ISO timestamps
-- Configurable JSON persistence for local development and tests
-- Type checking, production builds, and service plus HTTP contract tests
+---
 
-## Tech stack
+## Engineering snapshot
 
-| Area | Technology |
+| Area | Design |
 | --- | --- |
 | Runtime | Node.js 18+ |
 | HTTP | Express 5 |
 | Language | TypeScript 5 |
 | Validation | Zod 4 |
-| Development | tsx |
-| Persistence | JSON file |
+| Architecture | routes → controllers → services |
+| Persistence | Configurable JSON file store |
+| IDs | Server-generated UUIDs |
+| Errors | Centralized predictable error middleware |
+| Verification | Typecheck, service tests, HTTP contract tests, production build |
 
 ## Architecture
+
+```text
+HTTP request
+    │
+    ▼
+Routes
+  validation + endpoint wiring
+    │
+    ▼
+Controllers
+  HTTP translation only
+    │
+    ▼
+Services
+  business rules + persistence boundary
+    │
+    ▼
+JSON store
+```
 
 ```text
 src/
@@ -56,57 +66,30 @@ src/
     └── venue.types.ts
 ```
 
-- **Routes** connect endpoints to validation and controllers.
-- **Controllers** translate HTTP requests and responses.
-- **Services** contain business rules and persistence operations.
-- **Middleware** validates inputs and formats errors consistently.
+### Boundary rules
 
-## Getting started
+- **Routes** connect HTTP endpoints to schemas and controllers.
+- **Controllers** translate requests into service calls and responses.
+- **Services** own business rules and persistence operations.
+- **Validation middleware** rejects malformed body, params, and query input before business logic runs.
+- **Central error middleware** owns unexpected and known HTTP error formatting.
 
-### Requirements
+This keeps the service small without collapsing every concern into one file.
 
-- Node.js 18 or later
-- npm
+## API contract
 
-### Install and run
-
-```bash
-git clone https://github.com/rahman-997/venues-api.git
-cd venues-api
-npm install
-npm run dev
-```
-
-The API starts at `http://localhost:3000` by default.
-
-### Production build
-
-```bash
-npm run build
-npm start
-```
-
-### Quality checks
-
-```bash
-npm run typecheck
-npm test
-```
-
-## API reference
-
-| Method | Endpoint | Description |
+| Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/v1/venues` | Create a venue |
 | `GET` | `/v1/venues?limit=20` | List venues |
-| `GET` | `/v1/venues/:id` | Get a venue by ID |
+| `GET` | `/v1/venues/:id` | Read one venue |
 | `PATCH` | `/v1/venues/:id` | Partially update a venue |
 | `DELETE` | `/v1/venues/:id` | Delete a venue |
-| `GET` | `/health` | Service health check |
+| `GET` | `/health` | Liveness check |
 
-`GET /venues` redirects to the versioned collection endpoint.
+`GET /venues` redirects to the versioned collection route.
 
-### Venue model
+## Resource model
 
 ```ts
 type Venue = {
@@ -119,46 +102,13 @@ type Venue = {
 };
 ```
 
-The API generates `id` with `crypto.randomUUID()` and creates `createdAt` as
-an ISO timestamp. Venue names must be unique regardless of letter case.
+The server generates `id` with `crypto.randomUUID()` and `createdAt` as an ISO timestamp. Venue names are unique regardless of letter case.
 
-### Create a venue
+## Validation and error behavior
 
-```bash
-curl -X POST http://localhost:3000/v1/venues \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Bosphorus Hall",
-    "address": "1 Example Street, Istanbul",
-    "capacity": 250,
-    "contactEmail": "events@example.com"
-  }'
-```
+Validation covers request bodies, route parameters, and query strings. Invalid input never reaches the service layer.
 
-Successful response:
-
-```json
-{
-  "data": {
-    "id": "2abf9fc3-7a76-4e40-9c96-5a612b336824",
-    "name": "Bosphorus Hall",
-    "address": "1 Example Street, Istanbul",
-    "capacity": 250,
-    "contactEmail": "events@example.com",
-    "createdAt": "2026-08-25T10:00:00.000Z"
-  }
-}
-```
-
-### Update a venue
-
-```bash
-curl -X PATCH http://localhost:3000/v1/venues/VENUE_ID \
-  -H "Content-Type: application/json" \
-  -d '{"capacity":300}'
-```
-
-### Error shape
+Example error shape:
 
 ```json
 {
@@ -170,29 +120,80 @@ curl -X PATCH http://localhost:3000/v1/venues/VENUE_ID \
 }
 ```
 
-Common status codes are `400` for invalid input, `404` for a missing venue,
-`409` for a duplicate name, and `500` for unexpected persistence failures.
+Typical status codes:
 
-## Configuration
+```text
+400  invalid input
+404  venue not found
+409  duplicate venue name
+500  unexpected persistence/runtime failure
+```
+
+## Example request
+
+```bash
+curl -X POST https://venues-api-rahman.onrender.com/v1/venues \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Bosphorus Hall",
+    "address": "1 Example Street, Istanbul",
+    "capacity": 250,
+    "contactEmail": "events@example.com"
+  }'
+```
+
+## Persistence strategy
+
+The project intentionally uses JSON persistence to keep the service focused on API architecture rather than database infrastructure. The storage path is configurable, which allows tests to use isolated temporary files without touching development data.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | HTTP server port |
-| `HOST` | `0.0.0.0` | HTTP bind address |
-| `VENUES_DATA_FILE` | `data/venues.json` | JSON persistence path |
+| `HOST` | `0.0.0.0` | Bind address |
+| `VENUES_DATA_FILE` | `data/venues.json` | Persistence file |
 
-Tests set `VENUES_DATA_FILE` to an isolated temporary file, exercise both the
-service layer and real HTTP endpoints, and never modify development data.
+## Run locally
 
-## Scripts
+```bash
+git clone https://github.com/rahman-997/venues-api.git
+cd venues-api
+npm install
+npm run dev
+```
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the server with file watching |
-| `npm run typecheck` | Check TypeScript without emitting files |
-| `npm run build` | Compile the production build |
-| `npm start` | Run the compiled server |
-| `npm test` | Run service and HTTP contract tests |
+Production:
+
+```bash
+npm run build
+npm start
+```
+
+## Verification
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+Tests cover both business logic and real HTTP behavior. The test suite uses an isolated persistence file so verification is repeatable and does not modify normal development data.
+
+## Engineering signals
+
+- Versioned API surface
+- Strict TypeScript boundaries
+- Zod schemas for all external input
+- Case-insensitive uniqueness rule
+- Server-generated UUID and timestamps
+- Centralized HTTP errors
+- Layered business logic
+- Isolated persistence in tests
+- Service-level and HTTP contract verification
+- CI-backed typecheck/test/build workflow
+
+## Author
+
+Built by **[Abdulrahman Hajar](https://github.com/rahman-997)** — Software Engineer and Full-Stack Developer in Istanbul, Türkiye.
 
 ## License
 
