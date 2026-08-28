@@ -6,7 +6,7 @@
 
 Built with **Express 5, TypeScript 5, and Zod 4**, the API manages venue resources through a versioned REST contract and a deliberately small layered architecture.
 
-**Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com) · **Health:** [/health](https://venues-api-rahman.onrender.com/health) · **Case study:** [Portfolio](https://abdulrahman-hajjar-dev.netlify.app/work/venues-api/) · **Engineer:** [Abdulrahman Hajar](https://github.com/rahman-997)
+**Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com) · **Health:** [/health](https://venues-api-rahman.onrender.com/health) · **Case study:** [Portfolio](https://abdulrahman-hajar-dev.netlify.app/work/venues-api/) · **Engineer:** [Abdulrahman Hajar](https://github.com/rahman-997)
 
 > The free Render instance may need a short wake-up after inactivity.
 
