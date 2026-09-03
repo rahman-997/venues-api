@@ -38,10 +38,53 @@ try {
   const { port } = server.address() as AddressInfo;
   const baseUrl = `http://127.0.0.1:${port}`;
 
-  const healthResponse = await fetch(`${baseUrl}/health`);
+  const healthRequestId = "contract-health-1";
+  const healthResponse = await fetch(`${baseUrl}/health`, {
+    headers: { "x-request-id": healthRequestId },
+  });
   const healthBody = await healthResponse.json();
   assert.strictEqual(healthResponse.status, 200);
   assert.strictEqual(healthBody.status, "ok");
+  assert.strictEqual(healthBody.service, "venues-api");
+  assert.strictEqual(healthResponse.headers.get("x-request-id"), healthRequestId);
+  assert.strictEqual(healthResponse.headers.get("x-content-type-options"), "nosniff");
+  assert.strictEqual(healthResponse.headers.get("x-frame-options"), "DENY");
+  assert.strictEqual(healthResponse.headers.get("referrer-policy"), "no-referrer");
+  assert.ok(healthResponse.headers.get("content-security-policy")?.includes("default-src 'none'"));
+  assert.strictEqual(healthResponse.headers.get("x-powered-by"), null);
+
+  const legacyResponse = await fetch(`${baseUrl}/venues`, { redirect: "manual" });
+  assert.strictEqual(legacyResponse.status, 308);
+  assert.strictEqual(legacyResponse.headers.get("location"), "/v1/venues");
+
+  const unknownResponse = await fetch(`${baseUrl}/v1/does-not-exist`);
+  const unknownBody = await unknownResponse.json();
+  assert.strictEqual(unknownResponse.status, 404);
+  assert.strictEqual(unknownBody.error.code, "NOT_FOUND");
+  assert.ok(unknownBody.requestId, "unknown-route errors must include a request id");
+
+  const malformedRequestId = "contract-malformed-1";
+  const malformedResponse = await fetch(`${baseUrl}/v1/venues`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-request-id": malformedRequestId,
+    },
+    body: "{\"name\":",
+  });
+  const malformedBody = await malformedResponse.json();
+  assert.strictEqual(malformedResponse.status, 400);
+  assert.strictEqual(malformedBody.error.code, "BAD_REQUEST");
+  assert.strictEqual(malformedBody.requestId, malformedRequestId);
+
+  const oversizedResponse = await fetch(`${baseUrl}/v1/venues`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ padding: "x".repeat(110 * 1024) }),
+  });
+  const oversizedBody = await oversizedResponse.json();
+  assert.strictEqual(oversizedResponse.status, 413);
+  assert.strictEqual(oversizedBody.error.code, "PAYLOAD_TOO_LARGE");
 
   const createResponse = await fetch(`${baseUrl}/v1/venues`, {
     method: "POST",
