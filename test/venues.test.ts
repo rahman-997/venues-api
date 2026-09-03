@@ -26,6 +26,12 @@ assert.strictEqual(
 );
 venueService.delete(created.id);
 assert.strictEqual(venueService.list(10).length, 0, "service delete must remove the venue");
+assert.deepStrictEqual(JSON.parse(fs.readFileSync(dataFile, "utf8")), [], "persisted venue data must remain valid JSON");
+assert.deepStrictEqual(
+  fs.readdirSync(tmpDir).filter((entry) => entry.endsWith(".tmp")),
+  [],
+  "atomic persistence must not leave temporary files behind",
+);
 
 const server = app.listen(0, "127.0.0.1");
 
