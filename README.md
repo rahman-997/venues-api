@@ -8,7 +8,7 @@ Built with **Express 5, TypeScript 5, and Zod 4**, the API manages venue resourc
 
 **Live API:** [venues-api-rahman.onrender.com](https://venues-api-rahman.onrender.com) · **Health:** [/health](https://venues-api-rahman.onrender.com/health) · **Case study:** [Portfolio](https://abdulrahman-hajar-portfolio.onrender.com/work/venues-api/) · **Engineer:** [Abdulrahman Hajar](https://github.com/rahman-997)
 
-> The free Render instance may need a short wake-up after inactivity.
+> The free Render instance may need a short wake-up after inactivity. Its filesystem is ephemeral, so hosted demo data can reset after a restart or redeploy; the public deployment is not a durable data store.
 
 ---
 
@@ -16,12 +16,12 @@ Built with **Express 5, TypeScript 5, and Zod 4**, the API manages venue resourc
 
 | Area | Design |
 | --- | --- |
-| Runtime | Node.js 18+ with bounded HTTP timeouts and graceful shutdown |
+| Runtime | Node.js 24.x with bounded HTTP timeouts and graceful shutdown |
 | HTTP | Express 5 |
 | Language | TypeScript 5 |
 | Validation | Zod 4 + 100 KB JSON body ceiling |
 | Architecture | routes → controllers → services |
-| Persistence | Configurable JSON file store |
+| Persistence | Configurable JSON file store with atomic replace writes |
 | IDs | Server-generated UUIDs + per-request correlation IDs |
 | Errors | Centralized JSON errors for validation, malformed JSON, 404, 409, 413, and 500 paths |
 | Security | No framework disclosure, defensive API headers, immutable CI security scanners |
@@ -170,7 +170,9 @@ curl -X POST https://venues-api-rahman.onrender.com/v1/venues \
 
 ## Persistence strategy
 
-The project intentionally uses JSON persistence to keep the service focused on API architecture rather than database infrastructure. The storage path is configurable, which allows tests to use isolated temporary files without touching development data.
+The project intentionally uses JSON persistence to keep the service focused on API architecture rather than database infrastructure. The storage path is configurable, which allows tests to use isolated temporary files without touching development data. Writes go through a unique temporary file and atomic rename so an interrupted write cannot leave the primary JSON file partially written.
+
+The public Render deployment uses an **ephemeral filesystem**. Data created through the hosted demo can therefore disappear after a service restart or redeploy. For durable production data, the persistence boundary should be backed by durable storage such as a database or persistent volume; this demo intentionally does not claim that durability.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
@@ -202,7 +204,7 @@ npm test
 npm run build
 ```
 
-Tests cover both business logic and real HTTP behavior, including the normal CRUD contract, malformed JSON, oversized payloads, unknown routes, security headers, request correlation, and the legacy redirect. The suite uses an isolated persistence file so verification is repeatable and does not modify normal development data.
+Tests cover both business logic and real HTTP behavior, including the normal CRUD contract, malformed JSON, oversized payloads, unknown routes, security headers, request correlation, atomic persistence behavior, and the legacy redirect. The suite uses an isolated persistence file so verification is repeatable and does not modify normal development data.
 
 GitHub Actions also runs CodeQL and Semgrep with immutable scanner versions.
 
@@ -218,6 +220,7 @@ GitHub Actions also runs CodeQL and Semgrep with immutable scanner versions.
 - Defensive response headers without framework disclosure
 - Graceful process shutdown
 - Layered business logic
+- Atomic JSON replace writes
 - Isolated persistence in tests
 - Service-level and HTTP contract verification
 - CI-backed typecheck/test/build plus static security scanning
