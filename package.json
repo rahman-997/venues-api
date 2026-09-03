@@ -4,6 +4,9 @@
   "description": "A production-minded REST API for managing venues with Express 5, TypeScript, and Zod.",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
