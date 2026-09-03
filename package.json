@@ -22,6 +22,9 @@
     "tsx": "^4.19.0",
     "typescript": "^5.9.0"
   },
+  "overrides": {
+    "qs": "6.16.0"
+  },
   "author": "Abdulrahman Hajar",
   "homepage": "https://venues-api-rahman.onrender.com",
   "repository": {
