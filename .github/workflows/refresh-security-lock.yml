@@ -1,0 +1,53 @@
+name: Refresh security lockfile
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: venues-security-lock-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  refresh-lock:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'security/qs-6-16-0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout security branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Regenerate lockfile with patched override
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify patched dependency and project
+        run: |
+          npm ci
+          node -e "const q=require('qs/package.json'); if(q.version!=='6.16.0') throw new Error('Expected qs 6.16.0, got '+q.version); console.log('qs', q.version)"
+          npm audit --omit=dev --audit-level=moderate
+          npm run verify
+
+      - name: Commit regenerated lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo 'Lockfile already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Regenerate lockfile for qs 6.16.0'
+          git push origin HEAD:${GITHUB_HEAD_REF}
