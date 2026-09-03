@@ -9,10 +9,25 @@ type UpdateVenueInput = Partial<CreateVenueInput>;
 
 const DATA_FILE = process.env.VENUES_DATA_FILE ?? path.resolve(process.cwd(), "data", "venues.json");
 
-const ensureDataFile = (): void => {
+const writeAtomically = (venues: Venue[]): void => {
   const dir = path.dirname(DATA_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, "[]", "utf8");
+  const tempFile = `${DATA_FILE}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    fs.writeFileSync(tempFile, JSON.stringify(venues, null, 2), "utf8");
+    fs.renameSync(tempFile, DATA_FILE);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tempFile)) fs.rmSync(tempFile, { force: true });
+    } catch {
+      // Best-effort cleanup only; preserve the original persistence error.
+    }
+    throw new HttpError(500, "Failed to write data file");
+  }
+};
+
+const ensureDataFile = (): void => {
+  if (!fs.existsSync(DATA_FILE)) writeAtomically([]);
 };
 
 const readAll = (): Venue[] => {
@@ -26,11 +41,7 @@ const readAll = (): Venue[] => {
 };
 
 const writeAll = (venues: Venue[]): void => {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(venues, null, 2), "utf8");
-  } catch (err) {
-    throw new HttpError(500, "Failed to write data file");
-  }
+  writeAtomically(venues);
 };
 
 const normalizeName = (name: string): string => name.trim().toLowerCase();
