@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Typecheck, test and build
+    name: Typecheck, test, build and audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -34,3 +34,11 @@ jobs:
 
       - name: Run verification suite
         run: npm run verify
+
+      - name: Dependency audit
+        run: |
+          npm audit --audit-level=high || {
+            echo "Initial npm audit failed; retrying once in case the registry is transiently unavailable."
+            sleep 20
+            npm audit --audit-level=high
+          }
