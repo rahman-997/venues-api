@@ -37,8 +37,8 @@ jobs:
 
       - name: Dependency audit
         run: |
-          npm audit --audit-level=high || {
-            echo "Initial npm audit failed; retrying once in case the registry is transiently unavailable."
+          timeout 120s npm audit --audit-level=high || {
+            echo "Initial npm audit failed or timed out; retrying once in case the registry is transiently unavailable."
             sleep 20
-            npm audit --audit-level=high
+            timeout 120s npm audit --audit-level=high
           }
