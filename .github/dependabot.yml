@@ -19,6 +19,10 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: github-actions
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action*"
     directory: /
     schedule:
       interval: weekly
