@@ -90,11 +90,13 @@ This keeps the service small without collapsing every concern into one file.
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/v1/venues` | Create a venue |
-| `GET` | `/v1/venues?limit=20` | List venues |
+| `GET` | `/v1/venues?limit=20&offset=0` | List venues |
 | `GET` | `/v1/venues/:id` | Read one venue |
 | `PATCH` | `/v1/venues/:id` | Partially update a venue |
 | `DELETE` | `/v1/venues/:id` | Delete a venue |
 | `GET` | `/health` | Liveness check |
+
+Collection reads accept an optional nonnegative integer `offset` (default `0`) to reach subsequent pages. `limit` defaults to 20 and is capped at 100. Results retain newest-first insertion order; concurrent additions or deletions can shift offset-based pages.
 
 `GET /venues` returns a permanent `308` redirect to the versioned collection route.
 
