@@ -140,6 +140,21 @@ try {
   assert.strictEqual(listResponse.status, 200);
   assert.strictEqual(listBody.data.length, 1);
 
+  const nextPageResponse = await fetch(`${baseUrl}/v1/venues?limit=1&offset=1`);
+  assert.strictEqual(nextPageResponse.status, 200);
+  assert.deepStrictEqual((await nextPageResponse.json()).data, []);
+  for (const offset of ["-1", "1.5", "nope", "9007199254740992"]) {
+    const response = await fetch(`${baseUrl}/v1/venues?offset=${offset}`);
+    assert.strictEqual(response.status, 400, `invalid offset: ${offset}`);
+  }
+  const secondVenue = venueService.create({
+    name: "Second Hall", address: "5 Test Ave", capacity: 30,
+    contactEmail: "second@test.example",
+  });
+  const pagedResponse = await fetch(`${baseUrl}/v1/venues?limit=1&offset=1`);
+  assert.strictEqual((await pagedResponse.json()).data[0].id, venueId);
+  venueService.delete(secondVenue.id);
+
   const updateResponse = await fetch(`${baseUrl}/v1/venues/${venueId}`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },

@@ -77,9 +77,9 @@ export const venueService = {
     return venue;
   },
 
-  list(limit: number): Venue[] {
+  list(limit: number, offset = 0): Venue[] {
     const venues = readAll();
-    return venues.slice(0, limit);
+    return venues.slice(offset, offset + limit);
   },
 
   getById(id: string): Venue {
