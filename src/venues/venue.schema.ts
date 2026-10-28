@@ -23,6 +23,7 @@ export const venueIdParamsSchema = z.object({
 });
 
 export const listVenuesQuerySchema = z.object({
+  offset: z.coerce.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).default(0),
   limit: z.coerce
     .number()
     .int("Limit must be an integer")
