@@ -77,9 +77,14 @@ export const venueService = {
     return venue;
   },
 
-  list(limit: number, offset = 0): Venue[] {
+  list(limit: number, offset = 0, filters: { q?: string | undefined; minCapacity?: number | undefined } = {}): Venue[] {
     const venues = readAll();
-    return venues.slice(offset, offset + limit);
+    const query = filters.q?.toLowerCase();
+    const matches = venues.filter((venue) => {
+      if (filters.minCapacity !== undefined && venue.capacity < filters.minCapacity) return false;
+      return !query || venue.name.toLowerCase().includes(query) || venue.address.toLowerCase().includes(query);
+    });
+    return matches.slice(offset, offset + limit);
   },
 
   getById(id: string): Venue {

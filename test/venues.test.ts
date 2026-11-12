@@ -153,6 +153,16 @@ try {
   });
   const pagedResponse = await fetch(`${baseUrl}/v1/venues?limit=1&offset=1`);
   assert.strictEqual((await pagedResponse.json()).data[0].id, venueId);
+  for (const query of ["q=http&limit=1", "q=2%20TEST&minCapacity=120", "minCapacity=100&limit=1"]) {
+    const result = await fetch(`${baseUrl}/v1/venues?${query}`);
+    assert.equal(result.status, 200);
+    assert.deepStrictEqual((await result.json()).data.map((v: { id: string }) => v.id), [venueId]);
+  }
+  const empty = await fetch(`${baseUrl}/v1/venues?q=second&minCapacity=31`);
+  assert.deepStrictEqual((await empty.json()).data, []);
+  for (const invalid of ["minCapacity=1.5", "minCapacity=-1", "minCapacity=0", "q=%20"]) {
+    assert.equal((await fetch(`${baseUrl}/v1/venues?${invalid}`)).status, 400);
+  }
   venueService.delete(secondVenue.id);
 
   const updateResponse = await fetch(`${baseUrl}/v1/venues/${venueId}`, {
