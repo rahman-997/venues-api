@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireWriteAccess } from "../middleware/writeAccess.js";
 import {
   createVenue,
   deleteVenue,
@@ -20,10 +21,10 @@ import {
 
 const router = Router();
 
-router.post("/", validate(createVenueSchema), createVenue);
+router.post("/", requireWriteAccess, validate(createVenueSchema), createVenue);
 router.get("/", validateQuery(listVenuesQuerySchema), listVenues);
 router.get("/:id", validateParams(venueIdParamsSchema), getVenue);
-router.patch("/:id", validateParams(venueIdParamsSchema), validate(updateVenueSchema), updateVenue);
-router.delete("/:id", validateParams(venueIdParamsSchema), deleteVenue);
+router.patch("/:id", requireWriteAccess, validateParams(venueIdParamsSchema), validate(updateVenueSchema), updateVenue);
+router.delete("/:id", requireWriteAccess, validateParams(venueIdParamsSchema), deleteVenue);
 
 export default router;

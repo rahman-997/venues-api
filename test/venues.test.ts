@@ -171,6 +171,57 @@ try {
   const missingBody = await missingResponse.json();
   assert.strictEqual(missingResponse.status, 404);
   assert.strictEqual(missingBody.error.code, "NOT_FOUND");
+
+  // Production writes must fail closed, without changing local test fixtures.
+  const previousMode = process.env.NODE_ENV;
+  const previousSecret = process.env.VENUES_WRITE_API_KEY;
+  const productionSecret = "synthetic-only-write-secret-with-more-than-32-characters";
+  const payload = JSON.stringify({
+    name: "Protected Venue", address: "Test Road", capacity: 24, contactEmail: "protect@test.example",
+  });
+  try {
+    process.env.NODE_ENV = "production";
+    delete process.env.VENUES_WRITE_API_KEY;
+    const notConfigured = await fetch(`${baseUrl}/v1/venues`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: payload,
+    });
+    assert.strictEqual(notConfigured.status, 503);
+    assert.strictEqual((await notConfigured.json()).error.code, "WRITE_AUTH_NOT_CONFIGURED");
+    const readable = await fetch(`${baseUrl}/v1/venues`);
+    assert.strictEqual(readable.status, 200);
+
+    process.env.VENUES_WRITE_API_KEY = productionSecret;
+    for (const authorization of [undefined, "Bearer wrong-token-with-at-least-32-character-padding"]) {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      if (authorization) headers.authorization = authorization;
+      const denied = await fetch(`${baseUrl}/v1/venues`, { method: "POST", headers, body: payload });
+      assert.strictEqual(denied.status, 401);
+      assert.strictEqual(denied.headers.get("cache-control"), "no-store");
+    }
+    const createdProtected = await fetch(`${baseUrl}/v1/venues`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${productionSecret}` },
+      body: payload,
+    });
+    assert.strictEqual(createdProtected.status, 201);
+    const record = (await createdProtected.json()).data;
+    const blockedPatch = await fetch(`${baseUrl}/v1/venues/${record.id}`, {
+      method: "PATCH", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ capacity: 99 }),
+    });
+    assert.strictEqual(blockedPatch.status, 401);
+    const blockedDelete = await fetch(`${baseUrl}/v1/venues/${record.id}`, { method: "DELETE" });
+    assert.strictEqual(blockedDelete.status, 401);
+    const allowedDelete = await fetch(`${baseUrl}/v1/venues/${record.id}`, {
+      method: "DELETE", headers: { authorization: `Bearer ${productionSecret}` },
+    });
+    assert.strictEqual(allowedDelete.status, 204);
+  } finally {
+    if (previousMode === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousMode;
+    if (previousSecret === undefined) delete process.env.VENUES_WRITE_API_KEY;
+    else process.env.VENUES_WRITE_API_KEY = previousSecret;
+  }
 } finally {
   await new Promise<void>((resolve, reject) => {
     server.close((error) => error ? reject(error) : resolve());
