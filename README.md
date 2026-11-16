@@ -96,6 +96,8 @@ This keeps the service small without collapsing every concern into one file.
 | `DELETE` | `/v1/venues/:id` | Delete a venue |
 | `GET` | `/health` | Liveness check |
 
+Use `GET /v1/venues?q=hall&minCapacity=80` to find venues by a case-insensitive substring of their name or address and a minimum guest capacity. Both filters are optional and run before pagination. `q` accepts 1–120 trimmed characters and `minCapacity` accepts a positive integer.
+
 Collection reads accept an optional nonnegative integer `offset` (default `0`) to reach subsequent pages. `limit` defaults to 20 and is capped at 100. Results retain newest-first insertion order; concurrent additions or deletions can shift offset-based pages.
 
 `GET /venues` returns a permanent `308` redirect to the versioned collection route.
@@ -234,3 +236,11 @@ Built by **[Abdulrahman Hajar](https://github.com/rahman-997)** — Software Eng
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Production write authorization (draft security hardening)
+
+Production mode (`NODE_ENV=production`) requires the server-side `VENUES_WRITE_API_KEY` secret (32–512 printable ASCII characters) for `POST /v1/venues`, `PATCH /v1/venues/:id`, and `DELETE /v1/venues/:id`. Send `Authorization: Bearer <secret>` over HTTPS; do not embed the key in frontend JavaScript, URLs or logs.
+
+If the key is missing or invalid, writes fail closed with `503 WRITE_AUTH_NOT_CONFIGURED`. A missing/incorrect bearer secret returns `401 UNAUTHORIZED`. `GET` routes are unchanged. Local development remains unauthenticated to preserve simple offline verification.
+
+**Important:** The currently published public demo permits unauthenticated writes. This Draft PR is a contract change and must not be merged/deployed until the owner explicitly configures a secret, updates the consuming clients, and approves the change. Ephemeral JSON storage is still not suitable for a commercial production system. Never deploy this PR automatically.
