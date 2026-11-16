@@ -96,6 +96,8 @@ This keeps the service small without collapsing every concern into one file.
 | `DELETE` | `/v1/venues/:id` | Delete a venue |
 | `GET` | `/health` | Liveness check |
 
+Use `GET /v1/venues?q=hall&minCapacity=80` to find venues by a case-insensitive substring of their name or address and a minimum guest capacity. Both filters are optional and run before pagination. `q` accepts 1–120 trimmed characters and `minCapacity` accepts a positive integer.
+
 Collection reads accept an optional nonnegative integer `offset` (default `0`) to reach subsequent pages. `limit` defaults to 20 and is capped at 100. Results retain newest-first insertion order; concurrent additions or deletions can shift offset-based pages.
 
 `GET /venues` returns a permanent `308` redirect to the versioned collection route.

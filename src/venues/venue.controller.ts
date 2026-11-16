@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { listVenuesQuerySchema } from "./venue.schema.js";
 import type { Request, Response } from "express";
 import { venueService } from "./venue.service.js";
 
@@ -9,8 +11,8 @@ export const createVenue = (req: Request, res: Response): void => {
 };
 
 export const listVenues = (req: Request, res: Response): void => {
-  const { limit, offset } = req.query as unknown as { limit: number; offset: number };
-  const venues = venueService.list(limit, offset);
+  const query = req.query as unknown as z.output<typeof listVenuesQuerySchema>;
+  const venues = venueService.list(query.limit, query.offset, query);
   res.status(200).json({ data: venues });
 };
 
