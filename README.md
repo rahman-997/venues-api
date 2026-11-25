@@ -234,3 +234,11 @@ Built by **[Abdulrahman Hajar](https://github.com/rahman-997)** — Software Eng
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Production write authorization (draft security hardening)
+
+Production mode (`NODE_ENV=production`) requires the server-side `VENUES_WRITE_API_KEY` secret (32–512 printable ASCII characters) for `POST /v1/venues`, `PATCH /v1/venues/:id`, and `DELETE /v1/venues/:id`. Send `Authorization: Bearer <secret>` over HTTPS; do not embed the key in frontend JavaScript, URLs or logs.
+
+If the key is missing or invalid, writes fail closed with `503 WRITE_AUTH_NOT_CONFIGURED`. A missing/incorrect bearer secret returns `401 UNAUTHORIZED`. `GET` routes are unchanged. Local development remains unauthenticated to preserve simple offline verification.
+
+**Important:** The currently published public demo permits unauthenticated writes. This Draft PR is a contract change and must not be merged/deployed until the owner explicitly configures a secret, updates the consuming clients, and approves the change. Ephemeral JSON storage is still not suitable for a commercial production system. Never deploy this PR automatically.
