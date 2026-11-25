@@ -37,7 +37,9 @@ const readAll = (): Venue[] => {
     const items: unknown = JSON.parse(raw);
     // Refuse to overwrite malformed or foreign JSON documents on the next mutation.
     if (!Array.isArray(items) || items.some((item) =>
-      !item || typeof item !== "object" ||
+      !item || typeof item !== "object" || Array.isArray(item) ||
+      // A persisted record is returned verbatim to public readers; reject unknown fields.
+      Object.keys(item).length !== 6 ||
       typeof item.id !== "string" ||
       typeof item.name !== "string" ||
       typeof item.address !== "string" ||
