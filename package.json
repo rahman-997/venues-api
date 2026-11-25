@@ -12,7 +12,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx test/venues.test.ts",
+    "test": "node --import tsx test/venues.test.ts && node --import tsx --test test/storage-shape.test.ts",
     "verify": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
