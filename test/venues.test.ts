@@ -33,6 +33,17 @@ assert.deepStrictEqual(
   "atomic persistence must not leave temporary files behind",
 );
 
+// Corrupt storage must be rejected rather than replaced by a mutation.
+for (const corrupt of ['{}', '[null]', '[{"id":"fake"}]']) {
+  fs.writeFileSync(dataFile, corrupt, "utf8");
+  assert.throws(() => venueService.list(10), /Failed to read data file/);
+  assert.throws(() => venueService.create({
+    name: "Do Not Write", address: "Test", capacity: 1, contactEmail: "test@example.com",
+  }), /Failed to read data file/);
+  assert.strictEqual(fs.readFileSync(dataFile, "utf8"), corrupt, "corrupt storage must be preserved");
+}
+fs.writeFileSync(dataFile, "[]", "utf8");
+
 const server = app.listen(0, "127.0.0.1");
 
 try {

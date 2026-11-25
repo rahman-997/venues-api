@@ -34,7 +34,21 @@ const readAll = (): Venue[] => {
   ensureDataFile();
   try {
     const raw = fs.readFileSync(DATA_FILE, "utf8");
-    return JSON.parse(raw) as Venue[];
+    const items: unknown = JSON.parse(raw);
+    // Refuse to overwrite malformed or foreign JSON documents on the next mutation.
+    if (!Array.isArray(items) || items.some((item) =>
+      !item || typeof item !== "object" ||
+      typeof item.id !== "string" ||
+      typeof item.name !== "string" ||
+      typeof item.address !== "string" ||
+      typeof item.contactEmail !== "string" ||
+      typeof item.createdAt !== "string" ||
+      typeof item.capacity !== "number" ||
+      !Number.isFinite(item.capacity)
+    )) throw new Error("Invalid venue storage document");
+    const ids = items.map((item: Venue) => item.id);
+    if (new Set(ids).size !== ids.length) throw new Error("Duplicate venue IDs");
+    return items as Venue[];
   } catch (err) {
     throw new HttpError(500, "Failed to read data file");
   }
