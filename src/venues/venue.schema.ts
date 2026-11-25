@@ -23,6 +23,8 @@ export const venueIdParamsSchema = z.object({
 });
 
 export const listVenuesQuerySchema = z.object({
+  q: z.string().trim().min(1).max(120).optional(),
+  minCapacity: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive()).optional(),
   offset: z.coerce.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).default(0),
   limit: z.coerce
     .number()
